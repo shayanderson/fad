@@ -18,7 +18,7 @@
  * @staticvar array $cache
  * @staticvar array $errors
  * @staticvar boolean $is_init
- * @param array|int|string $key (array used for configuration settings setter)
+ * @param array|string $key (array used for configuration settings setter)
  * @param array|float|int|string $data (value to store)
  * @return mixed (returns false on fail/error)
  * @throws \Exception
@@ -332,14 +332,6 @@ function fad($key, $data = null)
 				return $func_db_replace($conf, $meta, $data);
 				break;
 
-			case 'error': // get last error
-				return end($errors);
-				break;
-
-			case 'errors': // get errors
-				return $errors;
-				break;
-
 			case 'drop': // drop databse
 				if(@unlink($meta['path']) === false)
 				{
@@ -350,6 +342,14 @@ function fad($key, $data = null)
 				$cache = []; // clear cache
 
 				return true;
+				break;
+
+			case 'error': // get last error
+				return end($errors);
+				break;
+
+			case 'errors': // get errors
+				return $errors;
 				break;
 
 			case 'key': // database has key?
@@ -391,7 +391,7 @@ function fad($key, $data = null)
 				break;
 
 			case 'max': // get max key (if numeric keys)
-				$max = 0; // init at 1 for non-numeric keys
+				$max = 0; // init at 0 for non-numeric keys
 
 				$db = $func_db_open($meta['path']);
 

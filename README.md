@@ -21,12 +21,11 @@ fad(['create' => 'default']);
 fad('default.1', 'test value'); // insert into database 'default' with key '1' 
 
 // you can also use auto increment key: 
-fad('default', 'another test value'); // returns '2' the auto key 
+fad('default', [1, 2, 3]); // returns '2' the auto key, store array 
 
 // retrieve key values: 
-echo fad('default.1'); 
-echo '<br />'; 
-echo fad('default.2');
+echo fad('default.1'); // 'test value' 
+print_r( fad('default.2') ); // [1, 2, 3]
 ```
 
 See more examples at http://www.shayanderson.com/projects/fad.htm

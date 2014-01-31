@@ -163,7 +163,6 @@ function fad($key, $data = null)
 		}
 	}
 
-	// database open //////////////////////////////////////////////////////////////////
 	$func_db_open = function($path, $mode = 'rb', $lock_type = LOCK_SH) use (&$fatal)
 	{
 		if(($db = @fopen($path, $mode)) === false)

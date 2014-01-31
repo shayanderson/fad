@@ -8,13 +8,13 @@ FAD is a lightweight, single function engine used to store key/value pairs in fl
 Quick Start
 ===
 ```php
-// include FAD file 
+// include fad file 
 require_once './lib/Fad/fad.php'; 
 
-// tell FAD where to store databases, and turn on display errors (do not use for production servers) 
+// tell fad where to store databases, and turn on display errors (do not use for production servers) 
 fad(['path' => './cache', 'errors' => true]); 
 
-// tell FAD to create a database 'default': 
+// tell fad to create a database 'default': 
 fad(['create' => 'default']); 
 
 // store a key/value pair (value can be string, int, float or array) 

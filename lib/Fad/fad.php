@@ -3,7 +3,7 @@
  * Fad - File Archive Database for PHP 5.4+
  * 
  * @package Fad
- * @version 1.0.b - Jan 31, 2014
+ * @version 1.0.b - Feb 01, 2014
  * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <http://www.shayanderson.com/projects/fad.htm>
@@ -15,6 +15,11 @@
  * @author Shay Anderson 02.14
  *
  * @staticvar array $conf
+ *		array create - create databases in array
+ *		boolean errors - display errors
+ *		string ext - database file extension
+ *		boolean gzip - use database gzip compression
+ *		string path - database store path
  * @staticvar array $cache
  * @staticvar array $errors
  * @staticvar boolean $is_init
@@ -50,7 +55,8 @@ function fad($key, $data = null)
 	static $conf = [
 		'create' => [],
 		'errors' => false,
-		'ext' => '.php',
+		'ext' => '.dat',
+		'gzip' => false,
 		'path' => null
 	];
 
@@ -143,8 +149,8 @@ function fad($key, $data = null)
 	$meta['key'] = isset($key[1]) ? $key[1] : null;
 	$meta['tag'] = $key[0];
 	$meta['tag_key'] = $meta['tag'] . '.' . $meta['key'];
-	$meta['path'] = $conf['path'] . $key[0] . $conf['ext'];
-	$meta['tmp_path'] = $meta['path'] . '.tmp' . $conf['ext'];
+	$meta['path'] = $conf['path'] . $key[0] . $conf['ext'] . ( $conf['gzip'] ? '.gz' : '' );
+	$meta['tmp_path'] = $meta['path'] . '.tmp' . $conf['ext'] . ( $conf['gzip'] ? '.gz' : '' );
 
 	// init db ////////////////////////////////////////////////////////////////////////
 	if(!is_array($conf['create']) || !in_array($meta['tag'], $conf['create']))
@@ -163,9 +169,9 @@ function fad($key, $data = null)
 		}
 	}
 
-	$func_db_open = function($path, $mode = 'rb', $lock_type = LOCK_SH) use (&$fatal)
+	$func_db_open = function($path, $mode = 'rb', $lock_type = LOCK_SH) use (&$conf, &$fatal)
 	{
-		if(($db = @fopen($path, $mode)) === false)
+		if(($db = @fopen(( $conf['gzip'] ? 'compress.zlib://' : '' ) . $path, $mode)) === false)
 		{
 			$fatal('Failed to read database "' . $path . '"');
 			return false;
@@ -183,29 +189,6 @@ function fad($key, $data = null)
 		$db = null;
 	};
 
-	// pack/unpack array for database (with multidimensional support)
-	$func_db_prep_array = function(array &$data, $in = true) use (&$func_db_prep_array)
-	{
-		foreach($data as &$v)
-		{
-			if(!is_array($v))
-			{
-				if($in)
-				{
-					$v = str_replace(["\n", "\r"], ['\\n', '\\r'], $v);
-				}
-				else
-				{
-					$v = str_replace(['\\n', '\\r'], ["\n", "\r"], $v);
-				}
-			}
-			else
-			{
-				$func_db_prep_array($v, $in);
-			}
-		}
-	};
-
 	$func_db_pack_line = function($unpacked_data) use (&$func_db_prep_array, &$fatal)
 	{
 		if(!is_string($unpacked_data) && !is_int($unpacked_data) && !is_float($unpacked_data)
@@ -215,30 +198,12 @@ function fad($key, $data = null)
 			return false;
 		}
 
-		if(is_string($unpacked_data))
-		{
-			$unpacked_data = str_replace(["\n", "\r"], ['\\n', '\\r'], $unpacked_data);
-		}
-		else if(is_array($unpacked_data))
-		{
-			$func_db_prep_array($unpacked_data);
-		}
-
 		return base64_encode(serialize($unpacked_data)) . PHP_EOL;
 	};
 
 	$func_db_unpack_line = function($packed_data) use (&$func_db_prep_array)
 	{
 		$packed_data = unserialize(base64_decode($packed_data));
-
-		if(is_string($packed_data))
-		{
-			$packed_data = str_replace(['\\n', '\\r'], ["\n", "\r"], $packed_data);
-		}
-		else if(is_array($packed_data))
-		{
-			$func_db_prep_array($packed_data, false);
-		}
 
 		return $packed_data;
 	};
@@ -433,8 +398,13 @@ function fad($key, $data = null)
 			return false;
 		}
 
-		if(@file_put_contents($meta['path'], $meta['key'] . $meta['sep'] .
-			$func_db_pack_line($data), FILE_APPEND | LOCK_EX) === false)
+		$db = $func_db_open($meta['path'], 'ab', LOCK_EX);
+
+		$write = @fwrite($db, $meta['key'] . $meta['sep'] . $func_db_pack_line($data));
+
+		$func_db_close($db);
+
+		if($write === false)
 		{
 			$fatal('Failed to write to database "' . $meta['path'] . '"');
 			return false;

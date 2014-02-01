@@ -381,6 +381,50 @@ function fad($key, $data = null)
 				return $max;
 				break;
 
+			case 'select': // (select, [limit]), (select, [offset, limit])
+				$sel = [];
+
+				if($data === null) // select all
+				{
+					$db = $func_db_open($meta['path']);
+
+					while(($ln = fgets($db)) !== false)
+					{
+						$ln = explode($meta['sep'], $ln);
+						$k = array_shift($ln);
+						$sel[$k] = $func_db_unpack_line(implode($meta['sep'], $ln)); // add line
+					}
+
+					$func_db_close($db);
+				}
+				else if(is_array($data))
+				{
+					$offset = isset($data[1]) ? (int)$data[0] : 0;
+					$limit = isset($data[1]) ? (int)$data[1] : (int)$data[0];
+
+					$db = $func_db_open($meta['path']);
+
+					$i = $j = 0;
+					while(($ln = fgets($db)) !== false)
+					{
+						if($i >= $offset && $j < $limit)
+						{
+							$ln = explode($meta['sep'], $ln);
+							$k = array_shift($ln);
+							$sel[$k] = $func_db_unpack_line(implode($meta['sep'], $ln)); // add line
+
+							$j++;
+						}
+
+						$i++;
+					}
+
+					$func_db_close($db);
+				}
+
+				return $sel;
+				break;
+
 			default:
 				$fatal('Invalid action "' . $meta['action'] . '" (unknown action)');
 				return false;

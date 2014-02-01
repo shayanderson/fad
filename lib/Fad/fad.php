@@ -392,7 +392,7 @@ function fad($key, $data = null)
 					{
 						$ln = explode($meta['sep'], $ln);
 						$k = array_shift($ln);
-						$sel[$k] = $func_db_unpack_line(implode($meta['sep'], $ln)); // add line
+						$sel[$k] = $func_db_unpack_line(implode($meta['sep'], $ln));
 					}
 
 					$func_db_close($db);
@@ -411,7 +411,7 @@ function fad($key, $data = null)
 						{
 							$ln = explode($meta['sep'], $ln);
 							$k = array_shift($ln);
-							$sel[$k] = $func_db_unpack_line(implode($meta['sep'], $ln)); // add line
+							$sel[$k] = $func_db_unpack_line(implode($meta['sep'], $ln));
 
 							$j++;
 						}

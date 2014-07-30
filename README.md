@@ -15,7 +15,7 @@ require_once './lib/Fad/fad.php';
 fad(['path' => './cache', 'errors' => true]); 
 
 // tell fad to create a database 'default': 
-fad(['create' => 'default']); 
+fad(['create' => ['default']]); 
 
 // store a key/value pair (value can be string, int, float or array) 
 fad('default.1', 'test value'); // insert into database 'default' with key '1' 
